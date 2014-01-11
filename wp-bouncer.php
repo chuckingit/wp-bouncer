@@ -1,9 +1,9 @@
 <?php
 /*
-Plugin Name: WP Bouncer
+Plugin Name: WP Bouncer CS Modified
 Plugin URI: http://andrewnorcross.com/plugins/wp-bouncer/
 Description: Only allow one device to be logged into WordPress for each user.
-Version: 1.1
+Version: 1.1.1CS
 Author: Andrew Norcross, strangerstudios
 Author URI: http://andrewnorcross.com
 
@@ -179,9 +179,17 @@ class WP_Bouncer
 			{			
 				if(empty($_COOKIE['fakesessid']) || $fakesessid != $_COOKIE['fakesessid'])
 				{
+					//cs send admin heads up
+					$cs_sendto = 'somebody@mydomain.com';
+					$cs_subject = 'WP Bounce triggered for '. $current_user->user_login;					
+					$cs_message = 'FYI - this user ' . $current_user->user_login . ' was just bounced on ' . date("Y-m-d H:i:s") . ' from this IP ' . $_SERVER['REMOTE_ADDR'];
+					$cs_headers = 'From: Bouncer <noreply@mydomain.com>' . "\r\n";
+					
+					wp_mail( $cs_sendto, $cs_subject, $cs_message, $cs_headers );
+					
 					//log user out
 					wp_logout();
-					
+										
 					//redirect
 					$this->flag_redirect();
 				}
@@ -200,7 +208,7 @@ class WP_Bouncer
 		$browser	= $this->browser_data();
 				
 		//store a "fake" session id in transient and cookie
-		$fakesessid = md5($browser['name'] . $broser['platform'] . $_SERVER['REMOVE_ADDR'] . time());
+		$fakesessid = md5($browser['name'] . $browser['platform'] . $_SERVER['REMOTE_ADDR'] . time());
 		set_transient("fakesessid_" . $user_login, $fakesessid, 3600*24*30);
 		setcookie("fakesessid", $fakesessid, time()+3600*24*30, COOKIEPATH, COOKIE_DOMAIN, false);	
 	}
